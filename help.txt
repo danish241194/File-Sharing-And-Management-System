@@ -1,0 +1,17 @@
+create_user username
+create_folder foldername (no space)
+upload filepath (no space)
+upload_udp filepath
+move_file abc.webm folder_inside_your/abc.webm
+ls . or ls foldername
+create_group G
+list_groups
+join_group G
+leave_group G (if no member in group i am deleting group)
+list_detail G
+share_msg G (then he will ask for message)
+inbox G
+get_file def/username/file.mp4
+quit (password danish for server)
+
+
