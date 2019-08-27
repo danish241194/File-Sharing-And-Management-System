@@ -31,7 +31,19 @@ public class MyServer {
 
     public static String recvMsg(InputStream is) throws Exception {
         byte[] arr = new byte[MAX_MSG_SIZE+1];
-        int bytesRead = is.read(arr, 0, MAX_MSG_SIZE);
+//        int bytesRead = is.read(arr, 0, MAX_MSG_SIZE);
+
+        int bytesRead = -1;
+        bytesRead = is.read(arr,0,MAX_MSG_SIZE);
+        int current = bytesRead;
+
+        do {
+            bytesRead =
+                    is.read(arr, current, (MAX_MSG_SIZE-current));
+            if(bytesRead >= 0) current += bytesRead;
+        }while(bytesRead > 0);
+
+
         String s = new String(arr);
         int siz = s.split(" ").length;
         String ss = "";
@@ -65,6 +77,7 @@ public class MyServer {
                     bis.read(mybytearray, 0, mybytearray.length);
                     os.write(mybytearray, 0, mybytearray.length);
                     os.flush();
+                    recvMsg(sock.getInputStream());
 
                     file_length -= DATASIZE;
                 } catch (Exception e) {
@@ -75,7 +88,7 @@ public class MyServer {
                 bis.read(mybytearray, 0, file_length);
                 os.write(mybytearray, 0, file_length);
                 os.flush();
-
+                recvMsg(sock.getInputStream());
             }
             print(recvMsg(is));
 
@@ -116,18 +129,33 @@ public class MyServer {
             int count = 1;
             while (filesize >= DATASIZE) {
                 int bytesRead = -1;
-                bytesRead = is.read(mybytearray, 0, mybytearray.length);
+                bytesRead = is.read(mybytearray,0,mybytearray.length);
                 int current = bytesRead;
+
+                do {
+                    bytesRead =
+                            is.read(mybytearray, current, (mybytearray.length-current));
+                    if(bytesRead >= 0) current += bytesRead;
+                }while(bytesRead > 0);
+//                bytesRead = is.read(mybytearray, 0, mybytearray.length);
+//                int current = bytesRead;
                 bos.write(mybytearray, 0, current);
                 bos.flush();
+                sendMsg("ack",os);
                 count++;
                 filesize -= DATASIZE;
             }
             if (filesize > 0) {
                 int bytesRead = -1;
-                bytesRead = is.read(mybytearray, 0, filesize);
-
+                bytesRead = is.read(mybytearray,0,filesize);
                 int current = bytesRead;
+
+                do {
+                    bytesRead =
+                            is.read(mybytearray, current, (filesize-current));
+                    if(bytesRead > 0) current += bytesRead;
+                }while(bytesRead > 0);
+                sendMsg("ack",os);
 
                 bos.write(mybytearray, 0, current);
                 bos.flush();

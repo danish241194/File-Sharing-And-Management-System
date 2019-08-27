@@ -29,21 +29,34 @@ public class MyClient {
             int count = 1;
             while (filesize >= DATASIZE) {
                 int bytesRead = -1;
-                bytesRead = is.read(mybytearray, 0, mybytearray.length);
+                bytesRead = is.read(mybytearray,0,mybytearray.length);
                 int current = bytesRead;
+
+                do {
+                    bytesRead =
+                            is.read(mybytearray, current, (mybytearray.length-current));
+                    if(bytesRead >= 0) current += bytesRead;
+                }while(bytesRead > 0);
+
                 bos.write(mybytearray, 0, current);
                 bos.flush();
+                sendMsg("ack",os);
+
                 count++;
                 filesize -= DATASIZE;
             }
             if (filesize > 0) {
 //                print("--Data Recieved--" + count);
                 int bytesRead = -1;
-                bytesRead = is.read(mybytearray, 0, filesize);
-
-                // System.out.println(bytesRead);
-
+                bytesRead = is.read(mybytearray,0,filesize);
                 int current = bytesRead;
+
+                do {
+                    bytesRead =
+                            is.read(mybytearray, current, (filesize-current));
+                    if(bytesRead > 0) current += bytesRead;
+                }while(bytesRead > 0);
+                sendMsg("ack",os);
 
                 bos.write(mybytearray, 0, current);
                 bos.flush();
@@ -66,8 +79,19 @@ public class MyClient {
     }
 
     public static String recvMsg(InputStream is) throws Exception {
+//        byte[] arr = new byte[MAX_MSG_SIZE+1];
         byte[] arr = new byte[MAX_MSG_SIZE+1];
-        int bytesRead = is.read(arr, 0, MAX_MSG_SIZE);
+//        int bytesRead = is.read(arr, 0, MAX_MSG_SIZE);
+
+        int bytesRead = -1;
+        bytesRead = is.read(arr,0,MAX_MSG_SIZE);
+        int current = bytesRead;
+
+        do {
+            bytesRead =
+                    is.read(arr, current, (MAX_MSG_SIZE-current));
+            if(bytesRead >= 0) current += bytesRead;
+        }while(bytesRead > 0);
         String s = new String(arr);
         int siz = s.split(" ").length;
         String ss = "";
@@ -114,6 +138,7 @@ public class MyClient {
                     bis.read(mybytearray, 0, mybytearray.length);
                     os.write(mybytearray, 0, mybytearray.length);
                     os.flush();
+                    recvMsg(sock.getInputStream());
                     file_length -= DATASIZE;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -123,6 +148,8 @@ public class MyClient {
                 bis.read(mybytearray, 0, file_length);
                 os.write(mybytearray, 0, file_length);
                 os.flush();
+                recvMsg(sock.getInputStream());
+
 //                String ack = recvMsg(is);
 //                System.out.println("--" + ack + "--");
             }
@@ -147,6 +174,9 @@ public class MyClient {
 
     }
     public static void main(String args[]) {
+        Scanner ss = new Scanner(System.in);
+        print("Enter IP");
+        SERVER_HOST = ss.nextLine();
         Socket sock = null;
         String cmd = "";
         String user = "";
@@ -396,7 +426,6 @@ public class MyClient {
                 System.out.println("File Does Not Exist");
             }
             int DATASIZE = 50000;
-
             byte[] mybytearray = new byte[DATASIZE];
             int file_length = (int) file.length();
             sendMsg(""+file_length,sock.getOutputStream());
